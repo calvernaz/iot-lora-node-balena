@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/TheThingsNetwork/go-cayenne-lib/cayennelpp"
 	"github.com/calvernaz/rak811"
 	"github.com/pkg/errors"
 	"github.com/tarm/serial"
@@ -45,8 +45,9 @@ func main()  {
 	lora.SetDataRate("5")
 
 	fmt.Println("before loop")
+	enc := cayennelpp.NewEncoder()
 	for {
-		f, err := os.Open("/sys/class/thermal/thermal_zone0/temp")
+		f, err := os.Open("/sys/class/thermal/thermal_zone0/celcius")
 		if err != nil {
 			fmt.Printf("%s\n", errors.Wrap(err, "open termal file"))
 			break
@@ -61,14 +62,10 @@ func main()  {
 		if err != nil {
 			continue
 		}
-		temp := val / 1000
+		celcius := val / 1000
 
-		buf := make([]byte, 4)
-		binary.BigEndian.PutUint32(buf, 1)
-		binary.BigEndian.PutUint32(buf, 103)
-		binary.BigEndian.PutUint32(buf, uint32(temp * 10 + 0.5))
-
-		lora.Send(string(buf))
+		enc.AddTemperature(1, float32(celcius))
+		lora.Send(string(enc.Bytes()))
 		fmt.Println("sending data")
 		time.Sleep(300 * time.Millisecond)
 	}
