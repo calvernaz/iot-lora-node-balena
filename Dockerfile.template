@@ -14,5 +14,4 @@ COPY --from=build /go/src/github.com/balena-io-projects/app/ .
 
 ENV APP_KEY
 ENV APP_EUI
-
 CMD ./app
